@@ -1,12 +1,13 @@
 use actix_web::{
-    error::{ResponseError}, get,
+    error::ResponseError,
     http::{header::ContentType, StatusCode},
     App, HttpResponse,
 };
 use derive_more::{Display, Error};
+use std::error::Error as StdError;
 
 /* Error Handler */
-#[derive(Debug, Display, Error)]
+#[derive(Debug, Display)]
 pub enum LynixError {
     #[display(fmt = "internal error")]
     InternalError,
@@ -22,6 +23,9 @@ pub enum LynixError {
 
     #[display(fmt = "unauthorized")]
     Unauthorized,
+
+    #[display(fmt = "bad data")]
+    BadData(String),
 }
 
 impl ResponseError for LynixError {
@@ -34,13 +38,16 @@ impl ResponseError for LynixError {
     fn status_code(&self) -> StatusCode {
         match *self {
             LynixError::InternalError => StatusCode::INTERNAL_SERVER_ERROR,
-            LynixError::BadClientData => StatusCode::BAD_REQUEST,
             LynixError::Timeout => StatusCode::GATEWAY_TIMEOUT,
             LynixError::NotFound => StatusCode::NOT_FOUND,
             LynixError::Unauthorized => StatusCode::UNAUTHORIZED,
+            LynixError::BadClientData => StatusCode::BAD_REQUEST,
+            LynixError::BadData(_) => StatusCode::BAD_REQUEST,
         }
     }
 }
+
+impl StdError for LynixError {}
 
 impl From<mongodb::error::Error> for LynixError {
     fn from(_: mongodb::error::Error) -> Self {

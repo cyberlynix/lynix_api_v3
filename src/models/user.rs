@@ -18,16 +18,11 @@ pub struct User {
     pub otp_verified: Option<bool>,
     pub otp_base32: Option<String>,
     pub otp_auth_url: Option<String>,
-
-    #[serde(rename = "created_at", skip_serializing_if = "Option::is_none")]
-    pub created_at: Option<i64>,
-    #[serde(rename = "updated_at", skip_serializing_if = "Option::is_none")]
-    pub updated_at: Option<i64>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct UserRegisterSchema {
-    pub name: String,
+    pub username: String,
     pub email: String,
     pub password: String,
 }
