@@ -1,0 +1,18 @@
+[package]
+name = "lynix_api_v3"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+log = "0.4.0"
+env_logger = "0.10.0"
+chrono = "0.4.9"
+actix-web = "4.3.1"
+actix-rt = "1"
+bson = "2.6.1"
+mongodb = "2.5.0"
+lazy_static = "1.4.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
