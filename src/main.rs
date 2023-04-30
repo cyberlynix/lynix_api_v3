@@ -7,14 +7,19 @@ mod db;
 use actix_web::{get, web::{self, Data}, App, HttpServer, HttpResponse, Responder};
 use errors::LynixError;
 use mongodb::Client;
-use routes::{stickers, auth};
+use routes::{stickers, auth, events, blog};
 use dotenvy::dotenv;
 use serde_json::json;
 
 /* Example from Actix */
 #[get("/")]
 async fn index() -> impl Responder {
-    "Hello, World!"
+    // Multiple Line String
+    "Hello World!
+    This is a test!
+    This is a test!
+    This is a test!
+    ".to_string()
 }
 
 /* Example from Actix */
@@ -52,8 +57,14 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || { 
         App::new()
         .app_data(Data::new(client.clone()))
-        .configure(stickers::configure_routes)
-        .configure(auth::configure_routes)
+        /* v1 paths */
+        .service(
+            web::scope("/v1")
+                .configure(stickers::configure_routes)
+                .configure(auth::configure_routes)
+                .configure(events::configure_routes)
+                .configure(blog::configure_routes)
+        )
         .default_service(web::route().to(handle_404))
     }).bind(("0.0.0.0", 28300))?.run().await
 

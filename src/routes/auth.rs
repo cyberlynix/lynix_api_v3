@@ -42,6 +42,8 @@ async fn register(db: web::Data<Client>, data: web::Json<UserRegisterSchema>) ->
         return Err(LynixError::BadData("User already exists".to_string()));
     }
 
+    /* Use Bcrypt */
+
     /* Register */
     // Convert UserRegisterSchema JSON to User (mismatched types expected struct `User`, found struct `UserRegisterSchema)
     let user = User {
@@ -68,14 +70,10 @@ async fn register(db: web::Data<Client>, data: web::Json<UserRegisterSchema>) ->
 
 /* Generate OTP */
 #[post("/auth/otp/generate")]
-pub fn generate() -> Result<HttpResponse, LynixError> {
-    Ok(HttpResponse::Ok().json(json!({ "status": "ok" })))
+async fn generate_otp() -> Result<HttpResponse, LynixError> {
+    Ok(HttpResponse::Ok().json(json!({ "status": "fail" })))
 }
 
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
-    cfg.service(
-        web::scope("/v2") // Force Auth Path
-            .service(register)
-            .service(signin)
-    );
+    cfg.service(register);
 }

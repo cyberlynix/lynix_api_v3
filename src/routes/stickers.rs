@@ -100,12 +100,9 @@ async fn delete_sticker(db: web::Data<Client>, path: web::Path<String>) -> Resul
 
 
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
-    cfg.service(
-        web::scope("/v1")
-            .service(get_stickers)
-            .service(get_sticker_from_id)
-            .service(add_sticker)
-            .service(update_sticker)
-            .service(delete_sticker)
-    );
+    cfg.service(get_stickers)
+        .service(get_sticker_from_id)
+        .service(add_sticker)
+        .service(update_sticker)
+        .service(delete_sticker);
 }
