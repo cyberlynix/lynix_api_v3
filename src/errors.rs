@@ -1,9 +1,9 @@
 use actix_web::{
     error::ResponseError,
     http::{header::ContentType, StatusCode},
-    App, HttpResponse,
+    HttpResponse,
 };
-use derive_more::{Display, Error};
+use derive_more::{Display};
 use std::error::Error as StdError;
 
 /* Error Handler */
@@ -14,9 +14,6 @@ pub enum LynixError {
 
     #[display(fmt = "bad request")]
     BadClientData,
-
-    #[display(fmt = "timeout")]
-    Timeout,
 
     #[display(fmt = "not found")]
     NotFound,
@@ -38,7 +35,6 @@ impl ResponseError for LynixError {
     fn status_code(&self) -> StatusCode {
         match *self {
             LynixError::InternalError => StatusCode::INTERNAL_SERVER_ERROR,
-            LynixError::Timeout => StatusCode::GATEWAY_TIMEOUT,
             LynixError::NotFound => StatusCode::NOT_FOUND,
             LynixError::Unauthorized => StatusCode::UNAUTHORIZED,
             LynixError::BadClientData => StatusCode::BAD_REQUEST,

@@ -44,7 +44,7 @@ async fn get_sticker_from_id(db: web::Data<Client>, path: web::Path<String>) -> 
     // Get the sticker from the database
     if let Ok(Some(sticker)) = collection.find_one(filter, None).await {
         let base64_data = sticker.base64.unwrap_or_default();
-        let image_data = base64::decode(base64_data);
+        let image_data = base64::decode(base64_data); // This needs to be resolved soon.
         
         // Sticker found, return it
         Ok(HttpResponse::Ok()
@@ -56,10 +56,12 @@ async fn get_sticker_from_id(db: web::Data<Client>, path: web::Path<String>) -> 
     }
 }
 
-/* Add Sticker */
+/* Add Sticker
+    ⚠️ This path is disabled due to security concerns with authentication api. ⚠️
+*/
 #[post("/sticker")]
-async fn add_sticker(db: web::Data<Client>) -> Result<HttpResponse, LynixError> {
-    Ok(HttpResponse::Ok().json(json!({"msg": "Not Implemented!"})))
+async fn add_sticker() -> Result<HttpResponse, LynixError> {
+    Err(LynixError::Unauthorized)
 }
 
 /* Update Sticker */
@@ -86,16 +88,12 @@ async fn update_sticker(db: web::Data<Client>, path: web::Path<String>, sticker_
     }
 }
 
-/* Delete Sticker */
+/* Delete Sticker
+    ⚠️ This path is disabled due to security concerns with authentication api. ⚠️
+*/
 #[post("/sticker/{id}/del")]
-async fn delete_sticker(db: web::Data<Client>, path: web::Path<String>) -> Result<HttpResponse, LynixError> {
-    let collection: Collection<Sticker> = db.database("lynix").collection("stickers");
-    let id = path.into_inner();
-
-    //let obj_id = ObjectId::parse_str(&id).map_err(|_| LynixError::InternalError)?;
-    let filter = doc! {"sid": id};
-
-    Ok(HttpResponse::Ok().json(json!({"msg": "Not Implemented!"})))
+async fn delete_sticker() -> Result<HttpResponse, LynixError> {
+    Err(LynixError::Unauthorized)
 }
 
 
