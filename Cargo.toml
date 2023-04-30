@@ -1,5 +1,5 @@
 [package]
-name = "lynix_api_v3"
+name = "lynix_api"
 version = "0.1.0"
 edition = "2021"
 
