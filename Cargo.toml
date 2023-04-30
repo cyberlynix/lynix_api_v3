@@ -17,3 +17,7 @@ dotenvy = "0"
 bson = "2.6.1"
 base64 = "0.21.0"
 chrono = "0.4.24"
+
+[[bin]]
+name = "lynix_api"
+path = "src/main.rs"
