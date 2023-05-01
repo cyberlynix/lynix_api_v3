@@ -10,6 +10,7 @@ use mongodb::Client;
 use routes::{stickers, auth, events, blog};
 use dotenvy::dotenv;
 use serde_json::json;
+use std::arch::x86_64;
 
 /* Example from Actix */
 #[get("/")]
@@ -48,8 +49,18 @@ async fn main() -> std::io::Result<()> {
     // Set up env
     dotenv().ok();
 
+    // Print Lynix ASCII Art
+    println!("---------------------------------------");
+    println!("Lynix API");
+    println!("---------------------------------------");
+
     // Set up logger
     env_logger::init();
+
+    // Check AVX CPU Support
+    if !is_x86_feature_detected!("avx") {
+        println!("WARNING: AVX is not supported and is recommended for use with the LynixAPI!");
+    }
 
     // Set up MongoDB client
     let client = db::init().await;
