@@ -2,6 +2,13 @@ use actix_web::{HttpResponse, get, post, web};
 use bson::doc;
 use mongodb::{Client, Collection};
 use serde_json::json;
+use pbkdf2::{
+    password_hash::{
+        rand_core::OsRng,
+        PasswordHash, PasswordHasher, PasswordVerifier, SaltString
+    },
+    Pbkdf2
+};
 use crate::models::user::{UserRegisterSchema, User, UserLoginSchema};
 
 use crate::errors::LynixError;
@@ -42,7 +49,10 @@ async fn register(db: web::Data<Client>, data: web::Json<UserRegisterSchema>) ->
         return Err(LynixError::BadData("User already exists".to_string()));
     }
 
-    /* Use Bcrypt */
+    /* Hash Password */
+    let salt = SaltString::generate(&mut OsRng);
+    // Hash password to PHC string ($pbkdf2-sha256$...)
+    let hashed_password = Pbkdf2.hash_password(data.password.to_owned().as_bytes(), &salt).unwrap().to_string();
 
     /* Register */
     // Convert UserRegisterSchema JSON to User (mismatched types expected struct `User`, found struct `UserRegisterSchema)
@@ -50,7 +60,7 @@ async fn register(db: web::Data<Client>, data: web::Json<UserRegisterSchema>) ->
         id: None,
         email: data.email.to_owned().to_lowercase(),
         username: data.username.to_owned(),
-        password: data.password.to_owned(),
+        password: hashed_password,
         avatar_url: None,
         is_furry: false,
         is_admin: false,
