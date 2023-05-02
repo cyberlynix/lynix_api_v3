@@ -8,8 +8,8 @@ use std::sync::Arc;
 
 use actix_web::{HttpResponse, get, post, web};
 use bson::{doc, oid::ObjectId};
-use mongodb::{Collection, Client};
-use scylla::{Session, IntoTypedRows};
+use mongodb::{Collection, Client}; // Will be removed soon
+use scylla::{Session, IntoTypedRows, FromRow};
 use serde::Deserialize;
 use serde_json::json;
 
@@ -20,15 +20,24 @@ use crate::{models::sticker::Sticker, errors::{LynixError}};
 async fn get_stickers(db: web::Data<Arc<Session>>) -> Result<HttpResponse, LynixError> {
     let query = "SELECT * FROM lynixca.stickers";
 
-    let result_set = match db.query(query, &[]).await {
+    /*let result_set = match db.query(query, &[]).await {
         Ok(result_set) => result_set,
         Err(err) => {
             eprintln!("Failed to execute query: {:?}", err);
             return Err(LynixError::BadData(err.to_string()));
         }
-    };
+    };*/
 
-    Ok(HttpResponse::Ok().json(json!("Hello, world!")))
+    let mut stickers: Vec<Sticker> = Vec::new();
+
+    if let Some(rows) = db.query(query, &[]).await.unwrap().rows {
+        for row in rows { // Figure out how to make this into a Sticker object and push it to the vector to return JSON
+            let sticker = Sticker::from_row(row).unwrap();
+            println!("Sticker Row, {}", sticker.sid);
+        }
+    }
+
+    Ok(HttpResponse::Ok().json(json!(stickers)))
 }
 
 #[get("/sticker/{id}")]
