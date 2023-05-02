@@ -1,21 +1,21 @@
-use mongodb::Client;
-use std::borrow::ToOwned;
+use scylla::Session;
 use std::env;
 
-// MongoDB initialize function.
-// Get DB connection url from environment file and connect.
-pub async fn init() -> Client {
-    let uri = match env::var("MONGO.URI") {
-        Ok(uri) => uri,
+// ScyllaDB initialize function.
+// Get contact points from environment variables and connect.
+pub async fn init() -> Session {
+    let contact_points = match env::var("SCYLLA.CONTACT_POINTS") {
+        Ok(contact_points) => contact_points,
         Err(_) => {
-            println!("Error loading env info for MongoDB connection");
-            "Error loading env variables to connect to MongoDB".to_owned()
+            println!("Error loading env info for ScyllaDB connection");
+            panic!("Error loading env variables to connect to ScyllaDB");
         }
     };
 
-    // panic if not able to connect to DB.
-    let client = Client::with_uri_str(uri)
-        .await
-        .expect("Error connecting to backend database");
-    client
+    let session = scylla::SessionBuilder::new()
+        .known_nodes(&vec![contact_points])
+        .build()
+        .await.expect("Error connecting to ScyllaDB cluster");
+
+    session
 }

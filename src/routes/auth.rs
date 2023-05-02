@@ -12,32 +12,35 @@ use pbkdf2::{
 use crate::models::user::{UserRegisterSchema, User, UserLoginSchema};
 
 use crate::errors::LynixError;
+
 /* Login */
-#[post("/auth/login")]
+#[post("/auth/signin")]
 async fn signin(db: web::Data<Client>, data: web::Json<UserLoginSchema>) -> Result<HttpResponse, LynixError> {
     let collection: Collection<User> = db.database("lynix").collection("users");
     let filter = doc! {"email": &data.email};
 
-    // Check if user exists
-    let user = collection.find_one(filter, None).await?;
+    println!("[AUTH] Email '{}' is currently signing in.", &data.email);
 
-    if let Some(_) = user {
-       // Compare password
-       if user.unwrap().password == data.password {
-              // Passwords match, return token
-              return Ok(HttpResponse::Ok().json(json!({ "status": "Login Success!" })));
-         } else {
-              // Passwords don't match, return error
-              return Ok(HttpResponse::Ok().json(json!({ "status": "Invalid Credentials." })));
-       }
+    let user = match collection.find_one(filter, None).await {
+        Ok(Some(row)) => row,
+        Ok(None) => return Err(LynixError::NotFound), //User Not Found
+        Err(err) => return Err(LynixError::BadData(err.to_string())),
+    };
+
+    // Verify password
+    let parsed_hash = PasswordHash::new(&user.password).unwrap();
+    if let Err(_err) = Pbkdf2.verify_password(data.password.as_bytes(), &parsed_hash) {
+        return Err(LynixError::BadData(("Invalid Credentials".to_string())));
     }
 
-    Ok(HttpResponse::Ok().body("Hey"))
+    // TODO: Create Session
+
+    Ok(HttpResponse::Ok().body(format!("Welcome, {}", user.username)))
 }
 
 /* Register */
-#[post("/auth/register")]
-async fn register(db: web::Data<Client>, data: web::Json<UserRegisterSchema>) -> Result<HttpResponse, LynixError> {
+#[post("/auth/signup")]
+async fn signup(db: web::Data<Client>, data: web::Json<UserRegisterSchema>) -> Result<HttpResponse, LynixError> {
 
     // Check if user exists
     let collection: Collection<User> = db.database("lynix").collection("users");
@@ -49,10 +52,12 @@ async fn register(db: web::Data<Client>, data: web::Json<UserRegisterSchema>) ->
         return Err(LynixError::BadData("User already exists".to_string()));
     }
 
+    println!("[INFO] User does not exist, creating...");
+
     /* Hash Password */
     let salt = SaltString::generate(&mut OsRng);
     // Hash password to PHC string ($pbkdf2-sha256$...)
-    let hashed_password = Pbkdf2.hash_password(data.password.to_owned().as_bytes(), &salt).unwrap().to_string();
+    let hashed_password = Pbkdf2.hash_password(data.password.to_owned().as_bytes(), &salt).unwrap().to_string(); // Franko will scream!
 
     /* Register */
     // Convert UserRegisterSchema JSON to User (mismatched types expected struct `User`, found struct `UserRegisterSchema)
@@ -72,18 +77,12 @@ async fn register(db: web::Data<Client>, data: web::Json<UserRegisterSchema>) ->
         otp_auth_url: None,
     };
 
-    let user = collection.insert_one(&user, None).await?;
+    collection.insert_one(&user, None).await?;
 
-    println!("Registering user: {:?}", &data);
     Ok(HttpResponse::Ok().json(json!({ "status": "ok" })))
 }
 
-/* Generate OTP */
-#[post("/auth/otp/generate")]
-async fn generate_otp() -> Result<HttpResponse, LynixError> {
-    Ok(HttpResponse::Ok().json(json!({ "status": "fail" })))
-}
-
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
-    cfg.service(register);
+    cfg.service(signup);
+    cfg.service(signin);
 }

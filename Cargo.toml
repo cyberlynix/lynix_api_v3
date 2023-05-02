@@ -19,6 +19,7 @@ base64 = "0.21.0"
 chrono = "0.4.24"
 pbkdf2 = { version = "0.12.1", features = ["simple"] }
 rand_core = { version = "0.6", features = ["std"] }
+scylla = "0.8"
 
 [[bin]]
 name = "lynix_api"

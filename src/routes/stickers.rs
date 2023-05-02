@@ -4,10 +4,12 @@
 // POST: /sticker/{id} (Update Sticker)
 // POST: /sticker/{id}/del (Delete Sticker)
 
+use std::sync::Arc;
+
 use actix_web::{HttpResponse, get, post, web};
 use bson::{doc, oid::ObjectId};
-use futures::{TryStreamExt};
 use mongodb::{Collection, Client};
+use scylla::{Session, IntoTypedRows};
 use serde::Deserialize;
 use serde_json::json;
 
@@ -15,18 +17,18 @@ use serde_json::json;
 use crate::{models::sticker::Sticker, errors::{LynixError}};
 
 #[get("/stickers")]
-async fn get_stickers(db: web::Data<Client>) -> Result<HttpResponse, LynixError> {
-    let collection: Collection<Sticker> = db.database("lynix").collection("stickers");
-    let mut cursor = collection.find(None, None).await?;
+async fn get_stickers(db: web::Data<Arc<Session>>) -> Result<HttpResponse, LynixError> {
+    let query = "SELECT * FROM lynixca.stickers";
 
-    let mut stickers: Vec<Sticker> = Vec::new();
+    let result_set = match db.query(query, &[]).await {
+        Ok(result_set) => result_set,
+        Err(err) => {
+            eprintln!("Failed to execute query: {:?}", err);
+            return Err(LynixError::BadData(err.to_string()));
+        }
+    };
 
-    while let Ok(Some(mut sticker)) = cursor.try_next().await {
-        sticker.base64 = None; // Set the base64 field to None to remove it from the struct definition
-        stickers.push(sticker);
-    }
-
-    Ok(HttpResponse::Ok().json(stickers))
+    Ok(HttpResponse::Ok().json(json!("Hello, world!")))
 }
 
 #[get("/sticker/{id}")]
